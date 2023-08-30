@@ -11,13 +11,13 @@
 #include <sys/stat.h>
 #include <iomanip>
 #include <sys/types.h>
+#include "Exceptions.h"
 
 #define COMMAND_ARGS_MAX_LENGTH (200)
 #define COMMAND_MAX_ARGS (20)
 
 class Command
 {
-  // TODO: Add your data members
 protected:
   int job_id;
   int process_id;
@@ -25,14 +25,11 @@ protected:
   bool external;
   bool time_out;
   std::vector<std::string> args_vec;
-  // std::shared_ptr<Command> shared_instance;
 
 public:
   Command(const char *cmd_line);
   virtual ~Command();
   virtual void execute() = 0;
-  //  virtual void preparePd(Command*,bool);
-  // virtual void cleanup();
   bool isExternal() { return external; }
   bool isTimeout() { return time_out; }
   void setShared(std::shared_ptr<Command>);
@@ -47,7 +44,6 @@ public:
   void setJobId(int id);
   void setProcessId(int id);
 
-  // TODO: Add your extra methods if needed
 };
 
 class BuiltInCommand : public Command
@@ -68,7 +64,6 @@ public:
 
 class PipeCommand : public Command
 {
-  // echo aaa | grep a > stdout
 protected:
   std::shared_ptr<Command> write_command;
   std::shared_ptr<Command> read_command;
@@ -333,10 +328,10 @@ public:
 
 /// ---------------------------------------Bonus end-----------------------------------------
 
+//  Implemented as a Singleton design pattern
 class SmallShell
 {
 private:
-  // TODO: Add your data members
   std::string prompt;
   std::string last_wd;
   std::shared_ptr<Command> current_command;
@@ -359,7 +354,6 @@ public:
 
   //  aux
   void executeCommand(const char *cmd_line);
-  // TODO: add extra methods as needed
   std::string get_last_wd() const;
   void set_last_wd(std::string);
   void setCurrentCommand(std::shared_ptr<Command>);
@@ -383,140 +377,6 @@ bool isSterrPipe(std::string cmd_str);
 bool isRedirect(std::string cmd_str);
 bool isPipe(std::string cmd_str);
 
-///------------------------------------------exceptions-----------------------------
 
-class UnspecifiedError : public std::exception
-{
-private:
-  std::string error_str;
-
-public:
-  UnspecifiedError(std::string error_line) : error_str("smash error:> \"" + error_line + "\"") {}
-  const char *what() const noexcept
-  {
-    return error_str.c_str();
-  }
-};
-
-class InvaildArgument : public std::exception
-{
-private:
-  std::string error_str;
-
-public:
-  InvaildArgument(std::string error_type) : error_str("smash error: " + error_type + ": invalid arguments") {}
-  const char *what() const noexcept
-  {
-    return error_str.c_str();
-  }
-};
-
-class TooManyArguments : public std::exception
-{
-  std::string error_str;
-
-public:
-  TooManyArguments(std::string error_type) : error_str("smash error: " + error_type + ": too many arguments") {}
-  const char *what() const noexcept
-  {
-    return error_str.c_str();
-  }
-};
-
-struct SystemCallFailed : public std::exception
-{
-  std::string error_str;
-
-public:
-  SystemCallFailed(std::string error_type) : error_str("smash error: " + error_type + " failed") {}
-  const char *what() const noexcept
-  {
-    return error_str.c_str();
-  }
-};
-
-class OldPWDNotSet : public std::exception
-{
-  std::string error_str;
-
-public:
-  OldPWDNotSet() : error_str("smash error: cd: OLDPWD not set") {}
-  const char *what() const noexcept
-  {
-    return error_str.c_str();
-  }
-};
-
-struct JobIdDoesntExist : public std::exception
-{
-  std::string error_str;
-
-public:
-  JobIdDoesntExist(std::string error_type, int job_id) : error_str("smash error: " + error_type + ": job-id " + std::to_string(job_id) + " does not exist") {}
-  const char *what() const noexcept
-  {
-    return error_str.c_str();
-  }
-};
-
-struct JobsListEmpty : public std::exception
-{
-  std::string error_str;
-
-public:
-  JobsListEmpty() : error_str("smash error: fg: jobs list is empty") {}
-  const char *what() const noexcept
-  {
-    return error_str.c_str();
-  }
-};
-
-struct JobAlreadyRunning : public std::exception
-{
-  std::string error_str;
-
-public:
-  JobAlreadyRunning(int job_id) : error_str("smash error: bg: job-id " + std::to_string(job_id) + " is already running in the background") {}
-  const char *what() const noexcept
-  {
-    return error_str.c_str();
-  }
-};
-
-struct NoStoppedJobs : public std::exception
-{
-  std::string error_str;
-
-public:
-  NoStoppedJobs() : error_str("smash error: bg: there is no stopped jobs to resume") {}
-  const char *what() const noexcept
-  {
-    return error_str.c_str();
-  }
-};
-
-struct InvaildCoreNumber : public std::exception
-{
-  std::string error_str;
-
-public:
-  InvaildCoreNumber() : error_str("smash error: setcore: invalid core number") {}
-  const char *what() const noexcept
-  {
-    return error_str.c_str();
-  }
-};
-
-struct DefaultError : public std::exception
-{
-  std::string error_str;
-
-public:
-  DefaultError(const char *cmd_l) : error_str("smash error: " + std::string(cmd_l)) {}
-  const char *what() const noexcept
-  {
-    return error_str.c_str();
-  }
-};
 
 #endif // SMASH_COMMAND_H_

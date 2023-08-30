@@ -18,7 +18,7 @@ using namespace std;
 
 const std::string WHITESPACE = " \n\r\t\f\v";
 
-//<---------------------------stuff functions--------------------------->
+//<---------------------------staff and aux functions--------------------------->
 
 #if 0
 #define FUNC_ENTRY() \
@@ -124,7 +124,7 @@ void try_catch(Command(*cmd))
         std::cerr << e.what() << std::endl;
     }
 }
-//<---------------------------stuff functions - end --------------------------->
+
 
 std::vector<std::string> get_args_in_vec(const char *cmd_line)
 {
@@ -156,6 +156,8 @@ bool isStringNumber(std::string str)
     }
     return true;
 }
+
+//<---------------------------staff and aux functions - end --------------------------->
 
 //<---------------------------C'tors and D'tors--------------------------->
 
@@ -742,15 +744,10 @@ void ExternalCommand::execute()
     }
     // parse path depending on Command type (Simple or Complex)
     // inserting "-c" for Complex Command
-    bool simple_plag = false;
-    if (_isSimpleExternal(cmd_l))
+    bool simple_plag = _isSimpleExternal(cmd_l);
+    if (!simple_plag)
     {
-        // args_vec[0] = "/bin/" + args_vec[0];
-        simple_plag = true;
-    }
-    else
-    {
-        for (int i = 1; i < int(args_vec.size()); i++)
+      for (int i = 1; i < int(args_vec.size()); i++)
             args_vec[0] += " " + args_vec[i];
 
         for (int i = 1; i < int(args_vec.size()); i++)
@@ -767,26 +764,22 @@ void ExternalCommand::execute()
     // executing Command
     if (execv(args[0], args) == -1)
     {
-        if (simple_plag == true)
+        if (simple_plag)
         {
-            args_vec[0] = "/bin/" + args_vec[0];
+           args_vec[0] = "/bin/" + args_vec[0];
+            _reformatArgsVec(args, args_vec);
+            execv(args[0], args);
+
+            // if will continue it means the exec failed - let's try the /usr/bin folder
+            args_vec[0] = "/usr" + args_vec[0];
             _reformatArgsVec(args, args_vec);
             execv(args[0], args);
         }
         perror("smash error: execv failed");
-        // delete[] args; לשחרר זיכרון לפני שיוצאים?
+
+        // kill forked process
         exit(1);
     }
-
-    // ---------------- validity check is in the father responsibility: in SmallShell::executeCommand-----//
-
-    //    if (execv(args[0], args) == -1)
-    //    {
-    //        smash.removeJob(this->job_id);
-    //        smash.setCurrentCommand(nullptr);
-    //        SystemCallFailed e("exec");
-    //        throw e;
-    //    }
 }
 
 void JobsCommand::execute()
